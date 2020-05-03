@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		30461EE8245E63910094CC3B /* SVPinCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = ACE199C92045566E0041203C /* SVPinCell.xib */; };
+		30461EE9245E63940094CC3B /* SVPinView.xib in Resources */ = {isa = PBXBuildFile; fileRef = ACE199CB2045566E0041203C /* SVPinView.xib */; };
 		ACC5DC0020469FEB00FA8CD7 /* SVPinView.gif in Resources */ = {isa = PBXBuildFile; fileRef = ACC5DBFF20469FEB00FA8CD7 /* SVPinView.gif */; };
 		ACC5DC042046A2A400FA8CD7 /* IBInspectables.png in Resources */ = {isa = PBXBuildFile; fileRef = ACC5DC032046A2A400FA8CD7 /* IBInspectables.png */; };
 		ACE199C3204556340041203C /* SVPinView.h in Headers */ = {isa = PBXBuildFile; fileRef = ACE199C1204556340041203C /* SVPinView.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -187,6 +189,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30461EE8245E63910094CC3B /* SVPinCell.xib in Resources */,
+				30461EE9245E63940094CC3B /* SVPinView.xib in Resources */,
 				ACC5DC042046A2A400FA8CD7 /* IBInspectables.png in Resources */,
 				ACC5DC0020469FEB00FA8CD7 /* SVPinView.gif in Resources */,
 			);
