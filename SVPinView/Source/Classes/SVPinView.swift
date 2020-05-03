@@ -30,6 +30,9 @@ public class SVPinView: UIView {
     fileprivate var reuseIdentifier = "SVPinCell"
     fileprivate var isLoading = true
     fileprivate var password = [String]()
+    fileprivate var getPinLength: Int {
+        return shouldSeperateText ? pinLength + 1 : pinLength
+    }
     
     // MARK: - Public Properties -
     @IBInspectable public var pinLength: Int = 5
@@ -37,6 +40,7 @@ public class SVPinView: UIView {
     @IBInspectable public var interSpace: CGFloat = 5
     @IBInspectable public var textColor: UIColor = UIColor.black
     @IBInspectable public var shouldSecureText: Bool = true
+    @IBInspectable public var shouldSeperateText: Bool = true
     @IBInspectable public var allowsWhitespaces: Bool = true
     @IBInspectable public var placeholder: String = ""
     
@@ -121,7 +125,11 @@ public class SVPinView: UIView {
         }
         
         // check if entered text is a backspace
-        nextTag = isBackSpace() ? textField.tag - 1 : textField.tag + 1
+        if shouldSeperateText, ((getPinLength / 2 == index && !isBackSpace()) || ((getPinLength / 2) + 2 == index && isBackSpace())) {
+            nextTag = isBackSpace() ? textField.tag - 2 : textField.tag + 2
+        } else {
+            nextTag = isBackSpace() ? textField.tag - 1 : textField.tag + 1
+        }
         
         // Try to find next responder
         if let nextResponder = textField.superview?.superview?.superview?.superview?.viewWithTag(nextTag) as UIResponder? {
@@ -145,9 +153,13 @@ public class SVPinView: UIView {
             }
         })
         
+        var passwordIndex = index - 1
+        if shouldSeperateText, getPinLength / 2 < index {
+            passwordIndex = index - 2
+        }
+        
         // store text
         let text =  textField.text ?? ""
-        let passwordIndex = index - 1
         if password.count > (passwordIndex) {
             // delete if space
             password[passwordIndex] = text
@@ -166,9 +178,12 @@ public class SVPinView: UIView {
     }
     
     fileprivate func setPlaceholder() {
+        if shouldSeperateText {
+            placeholder.insert("\u{2014}", at: placeholder.index(placeholder.startIndex, offsetBy: Int(getPinLength / 2)))
+        }
+        
         for (index, char) in placeholder.enumerated() {
-            guard index < pinLength else { return }
-            
+            guard index < getPinLength else { return }
             if let placeholderLabel = collectionView.cellForItem(at: IndexPath(item: index, section: 0))?.viewWithTag(400) as? UILabel {
                 placeholderLabel.text = String(char)
             } else { showPinError(error: "ERR-102: Type Mismatch - Line 172") }
@@ -226,7 +241,7 @@ public class SVPinView: UIView {
     public func getPin() -> String {
         
         guard !isLoading else { return "" }
-        guard password.count == pinLength && password.joined().trimmingCharacters(in: CharacterSet(charactersIn: " ")).count == pinLength else {
+        guard password.count == getPinLength && password.joined().trimmingCharacters(in: CharacterSet(charactersIn: " ")).count == getPinLength else {
             return ""
         }
         return password.joined()
@@ -251,7 +266,7 @@ public class SVPinView: UIView {
         password = []
         for (index,char) in pin.enumerated() {
 
-            guard index < pinLength else { return }
+            guard index < getPinLength else { return }
 
             //Get the first textField
             guard let textField = collectionView.cellForItem(at: IndexPath(item: index, section: 0))?.viewWithTag(101 + index) as? SVPinField,
@@ -282,7 +297,7 @@ public class SVPinView: UIView {
 extension SVPinView : UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout
 {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return pinLength
+        return getPinLength
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -295,6 +310,13 @@ extension SVPinView : UICollectionViewDataSource, UICollectionViewDelegate, UICo
         else {
             showPinError(error: "ERR-104: Tag Mismatch - Line 291")
             return UICollectionViewCell()
+        }
+        
+        if indexPath.row == getPinLength / 2 {
+            placeholderLabel.text = "\u{2014}"
+            underLine.backgroundColor = .clear
+            textField.isEnabled = false
+            return cell
         }
         
         // Setting up textField
@@ -323,7 +345,7 @@ extension SVPinView : UICollectionViewDataSource, UICollectionViewDelegate, UICo
         }
         
         // Finished loading pinView
-        if indexPath.row == pinLength - 1 && isLoading {
+        if indexPath.row == getPinLength - 1 && isLoading {
             isLoading = false
             DispatchQueue.main.async {
                 if !self.placeholder.isEmpty { self.setPlaceholder() }
@@ -335,10 +357,10 @@ extension SVPinView : UICollectionViewDataSource, UICollectionViewDelegate, UICo
     
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if UIDevice.current.orientation == .landscapeLeft || UIDevice.current.orientation == .landscapeRight {
-            let width = (collectionView.bounds.width - (interSpace * CGFloat(max(pinLength, 1) - 1)))/CGFloat(pinLength)
+            let width = (collectionView.bounds.width - (interSpace * CGFloat(max(getPinLength, 1) - 1)))/CGFloat(getPinLength)
             return CGSize(width: width, height: collectionView.frame.height)
         }
-        let width = (collectionView.bounds.width - (interSpace * CGFloat(max(pinLength, 1) - 1)))/CGFloat(pinLength)
+        let width = (collectionView.bounds.width - (interSpace * CGFloat(max(getPinLength, 1) - 1)))/CGFloat(getPinLength)
         let height = collectionView.frame.height
         return CGSize(width: min(width, height), height: min(width, height))
     }
@@ -352,13 +374,13 @@ extension SVPinView : UICollectionViewDataSource, UICollectionViewDelegate, UICo
         if UIDevice.current.orientation == .landscapeLeft || UIDevice.current.orientation == .landscapeRight {
             return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         }
-        let width = (collectionView.bounds.width - (interSpace * CGFloat(max(pinLength, 1) - 1)))/CGFloat(pinLength)
+        let width = (collectionView.bounds.width - (interSpace * CGFloat(max(getPinLength, 1) - 1)))/CGFloat(getPinLength)
         let height = collectionView.frame.height
         let top = (collectionView.bounds.height - min(width, height)) / 2
         if height < width {
             // If width of field > height, size the fields to the pinView height and center them.
-            let totalCellWidth = height * CGFloat(pinLength)
-            let totalSpacingWidth = interSpace * CGFloat(max(pinLength, 1) - 1)
+            let totalCellWidth = height * CGFloat(getPinLength)
+            let totalSpacingWidth = interSpace * CGFloat(max(getPinLength, 1) - 1)
             let inset = (collectionView.frame.size.width - CGFloat(totalCellWidth + CGFloat(totalSpacingWidth))) / 2
             return UIEdgeInsets(top: top, left: inset, bottom: 0, right: inset)
         }
@@ -397,7 +419,7 @@ extension SVPinView : UITextFieldDelegate
     }
     
     public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        if (string == UIPasteboard.general.string) || (isContentTypeOneTimeCode && string.count >= pinLength) {
+        if (string == UIPasteboard.general.string) || (isContentTypeOneTimeCode && string.count >= getPinLength) {
             textField.resignFirstResponder()
             DispatchQueue.main.async { self.pastePin(pin: string) }
             return false
