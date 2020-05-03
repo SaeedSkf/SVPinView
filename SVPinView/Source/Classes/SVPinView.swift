@@ -241,7 +241,8 @@ public class SVPinView: UIView {
     public func getPin() -> String {
         
         guard !isLoading else { return "" }
-        guard password.count == getPinLength && password.joined().trimmingCharacters(in: CharacterSet(charactersIn: " ")).count == getPinLength else {
+        let lenght = shouldSeperateText ? getPinLength - 1 : getPinLength
+        guard password.count == lenght && password.joined().trimmingCharacters(in: CharacterSet(charactersIn: " ")).count == lenght else {
             return ""
         }
         return password.joined()
